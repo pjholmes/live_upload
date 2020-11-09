@@ -82,4 +82,25 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 
    ![error](./docs/error.png)
 
-   1. Continuing ...
+1. Git init and commit
+
+1. \$ mix phx.gen.live Blog Post posts title body
+
+1. Add routes to `lib/live_upload_web/router.ex`
+
+```
+  live "/posts", PostLive.Index, :index
+  live "/posts/new", PostLive.Index, :new
+  live "/posts/:id/edit", PostLive.Index, :edit
+
+  live "/posts/:id", PostLive.Show, :show
+  live "/posts/:id/show/edit", PostLive.Show, :edit
+```
+
+1. \$ mix ecto.migrate
+
+1. \$ mix phx.server
+
+> (add/edit/delete some posts - appears to work fine)
+
+1. Commit
