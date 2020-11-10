@@ -1,5 +1,7 @@
 # Steps:
 
+These are the steps I followed to enable live upload. So far I cannot make it work, but this is certainly my fault.
+
 1. Run the following:
 
    ```shell
