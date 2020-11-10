@@ -118,7 +118,7 @@ Goal is to add a new file upload to a new blog post (not concerned about edit fo
 
 > Note: It would be ideal if uploads.md document made changes to a live form that had been created using `phx.gen.live`, including the modal, since this could be the starting point for many people. I'm happy to make these changes once I understand it myself.
 
-> Note: It's not clear what `@upload` is. I don't think one would guess that the call to allow_upload would create an assign named `upload`. I though it was the entity that the avatar would be associated with (such as my `@post`)
+> Note: It was not clear what `@uploads` is. I don't think one would guess that the call to allow_upload would create an assign named `uploads`. I though it was the entity that the avatar would be associated with (such as my `@post`)
 
 ## Allow uploads
 
@@ -157,7 +157,9 @@ Goal is to add a new file upload to a new blog post (not concerned about edit fo
    `lib/live_upload_web/live/post_live/form.component.html.leex`
 
    ```elixir
+
    ...
+
    <%= label f, :body %>
    <%= text_input f, :body %>
    <%= error_tag f, :body %>
@@ -209,7 +211,7 @@ Goal is to add a new file upload to a new blog post (not concerned about edit fo
    end
    ```
 
-   Because handle_event forwards the call to save_post, it was not clear where the best place to put this would be.
+   Because handle_event forwards the call to save_post, it was not obvious to me where the best place to put this would be.
 
    Code before my changes:
 
@@ -267,11 +269,11 @@ Goal is to add a new file upload to a new blog post (not concerned about edit fo
       $ mix phx.server
    ```
 
-   1. go to localhost:4000/posts
+   1. Go to localhost:4000/posts
    2. Click "New Post"
    3. Fill in fields and select a file
    4. Click "save"
-   5. handle_event runs but not the function called by `consume_uploaded_entries`
+   5. handle_event runs but not the function in argument 4 of `consume_uploaded_entries`
 
 1. add `liveSocket.enableDebug()` to app.js
 
@@ -290,12 +292,13 @@ Goal is to add a new file upload to a new blog post (not concerned about edit fo
       $ mix phx.server
    ```
 
-   1. go to localhost:4000/posts
-   2. open console
-      c. Click "New Post"
-   3. Fill in fields and select a file
-   4. Click "save"
-   5. Log shows the following: (I added comments at the end of 3 lines)
+   1. Go to localhost:4000/posts
+   1. open console
+   1. Click "New Post"
+   1. Fill in fields and select a file
+   1. Click "save"
+
+   The browser console shows the following: (I added comments at the end of 3 lines)
 
    ```
    phx-FkX8FtWVWqjnUggB mount:  -  {0: "", 1: "", 2: {…}, s: Array(4), t: "Listing Posts"}
@@ -307,9 +310,11 @@ Goal is to add a new file upload to a new blog post (not concerned about edit fo
    phoenix_live_view.js?2c90:1 phx-FkX8GhD894iTLAFF mount:  -  {0: "Post created successfully", 1: "", 2: {…}, s: Array(4), t: "Listing Posts"}
    ```
 
-   1. Again, there were no uploaded files and it appears `consume_uploaded_entries` never called the function in argument 4.
+   Again, there were no uploaded files and it appears `consume_uploaded_entries` never called the function in argument 4.
 
-# Old content
+<br><br><br><br><br><br>
+
+# Original README content
 
 To start your Phoenix server:
 
