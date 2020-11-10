@@ -135,182 +135,50 @@ Goal is to add a new file upload to a new blog post (not concerned about edit fo
    end
    ```
 
-   It's not clear whether these should go in the `mount` in `post_live/index.ex` or in the `apply_action(socket, :new, _params)` function which is called when the 'New Post' button is clicked (or route to /posts/new). I picked the `apply_action` function, as I would think `allow_upload` would need to be called each time the model form is opened...
+   It seems to me that each time live_modal is called to display the FormComponent, the FormComponent should create a new %uploads, so, I
+   put the `assign` and `allow_upload` in the mount function on the component. The component did not have a mount/1. so I added it.
 
-   `lib/live_upload_web/live/post_live/index.ex`
+   `lib/live_upload_web/live/post_live/form_component.ex`
 
    ```elixir
-   defp apply_action(socket, :new, _params) do
-      socket
-      |> assign(:page_title, "New Post")
-      |> assign(:post, %Post{})
-      # added the next 2 lines
-      |> assign(:uploaded_files, [])
-      |> allow_upload(:avatar, accept: ~w(.jpg .jpeg .png), max_entries: 1)
+   defmodule LiveUploadWeb.PostLive.FormComponent do
+      use LiveUploadWeb, :live_component
+      alias LiveUpload.Blog
+
+      @impl true
+
+      def mount(socket) do
+      IO.puts("in mount")
+
+      newSocket =
+         socket
+         |> assign(:uploaded_files, [])
+         |> allow_upload(:avatar, accept: ~w(.jpg .jpeg .png), max_entries: 1)
+
+      IO.inspect(newSocket, label: "Socket")
+
+      {:ok, newSocket}
    end
-   ```
-
-## Render Reactive Element
-
-1. Add the element to the form:
-
-   `lib/live_upload_web/live/post_live/form.component.html.leex`
-
-   ```elixir
 
    ...
-
-   <%= label f, :body %>
-   <%= text_input f, :body %>
-   <%= error_tag f, :body %>
-
-   <%= live_file_input @uploads.avatar %>
-
-   <%= submit "Save", phx_disable_with: "Saving..." %>
    ```
 
-1. Change index.html.leex to pass @uploaded_files and @uploads to the modal:
+However, when I run the server, open `/posts`, click on "New Post", click on "Choose File", as soon as I select a file I get an error on the server:
 
-   `lib/live_upload_web/live/post_live/index.html.leex`
+```
+[error] GenServer #PID<0.558.0> terminating
+** (ArgumentError) no uploads have been allowed
+    (phoenix_live_view 0.15.0-dev) lib/phoenix_live_view/upload.ex:166: Phoenix.LiveView.Upload.get_upload_by_ref!/2
+    (phoenix_live_view 0.15.0-dev) lib/phoenix_live_view/channel.ex:905: anonymous fn/2 in Phoenix.LiveView.Channel.maybe_update_uploads/2
+    (stdlib 3.13.2) maps.erl:233: :maps.fold_1/3
+    (phoenix_live_view 0.15.0-dev) lib/phoenix_live_view/channel.ex:174: Phoenix.LiveView.Channel.handle_info/2
+    (stdlib 3.13.2) gen_server.erl:680: :gen_server.try_dispatch/4
+    (stdlib 3.13.2) gen_server.erl:756: :gen_server.handle_msg/6
+    (stdlib 3.13.2) proc_lib.erl:226: :proc_lib.init_p_do_apply/3
+Last message: %Phoenix.Socket.Message{event: "event", join_ref: "4", payload: %{"cid" => 2, "event" => "validate", "type" => "form", "uploads" => %{"phx-FkYQ0pNWu8AUeAEC" => [%{"name" => "kyle.jpg", "path" => "avatar", "ref" => "0", "size" => 53482, "type" => "image/jpeg"}]}, "value" => "_csrf_token=KRwlAQIechQhD0s7AG41Qis0DCYlIxl0zZQkqN3PED2wL4ozNkkjTvOA&post%5Btitle%5D=title+1&post%5Bbody%5D=body+1&_target=avatar"}, ref: "8", topic: "lv:phx-FkYQ0hdFr6CpYgDC"}
+State: %{components: {%{1 => {LiveUploadWeb.ModalComponent, :modal, %{component: LiveUploadWeb.PostLive.FormComponent, flash: %{}, id: :modal, myself: %Phoenix.LiveComponent.CID{cid: 1}, opts: [id: :new, title: "New Post", action: :new, post: %LiveUpload.Blog.Post{__meta__: #Ecto.Schema.Metadata<:built, "posts">, body: nil, id: nil, inserted_at: nil, title: nil, updated_at: nil}, return_to: "/posts"], return_to: "/posts"}, %{changed: %{}}, {10673596847530257233388001180963798212, %{}}}, 2 => {LiveUploadWeb.PostLive.FormComponent, :new, %{action: :new, changeset: #Ecto.Changeset<action: :validate, changes: %{body: "body 1", title: "title 1"}, errors: [], data: #LiveUpload.Blog.Post<>, valid?: true>, flash: %{}, id: :new, myself: %Phoenix.LiveComponent.CID{cid: 2}, post: %LiveUpload.Blog.Post{__meta__: #Ecto.Schema.Metadata<:built, "posts">, body: nil, id: nil, inserted_at: nil, title: nil, updated_at: nil}, return_to: "/posts", title: "New Post", uploaded_files: [], uploads: %{__phoenix_refs_to_names__: %{"phx-FkYQ0pNWu8AUeAEC" => :avatar}, avatar: #Phoenix.LiveView.UploadConfig<accept: ".jpg,.jpeg,.png", auto_upload?: false, entries: [], errors: [], max_entries: 1, max_file_size: 8000000, name: :avatar, progress_event: nil, ref: "phx-FkYQ0pNWu8AUeAEC", ...>}}, %{changed: %{}}, {36334190098890808283226908231677700255, %{}}}}, %{LiveUploadWeb.ModalComponent => %{modal: 1}, LiveUploadWeb.PostLive.FormComponent => %{new: 2}}, 3}, join_ref: "4", serializer: Phoenix.Socket.V2.JSONSerializer, socket: #Phoenix.LiveView.Socket<assigns: %{flash: %{}, live_action: :new, page_title: "New Post", post: %LiveUpload.Blog.Post{__meta__: #Ecto.Schema.Metadata<:built, "posts">, body: nil, id: nil, ...}, posts: [%LiveUpload.Blog.Post{__meta__: #Ecto.Schema.Metadata<:loaded, "posts">, ...}, %LiveUpload.Blog.Post{...}, ...]}, changed: %{}, endpoint: LiveUploadWeb.Endpoint, id: "phx-FkYQ0hdFr6CpYgDC", parent_pid: nil, root_pid: #PID<0.558.0>, router: LiveUploadWeb.Router, view: LiveUploadWeb.PostLive.Index, ...>, topic: "lv:phx-FkYQ0hdFr6CpYgDC", transport_pid: #PID<0.555.0>}
 
-   ```elixir
-   <%= live_modal @socket, LiveUploadWeb.PostLive.FormComponent,
-      id: @post.id || :new,
-      title: @page_title,
-      action: @live_action,
-      post: @post,
-      uploaded_files: @uploaded_files,
-      uploads: @uploads,
-      return_to: Routes.post_index_path(@socket, :index)
-      %>
-   ```
-
-## Consume Uploaded Entries
-
-1. Again, quoting from the guide:
-
-   When the end-user submits a form containing a
-   [`live_file_input/2`](`Phoenix.LiveView.Helpers.live_file_input/2`),
-   the JavaScript client first uploads the file(s) before
-   invoking the callback for the form's `phx-submit` event.
-
-   Within the callback for the `phx-submit` event, you invoke
-   the `Phoenix.LiveView.consume_uploaded_entries/3` function
-   to process the completed uploads, persisting the relevant
-   upload data alongside the form data:
-
-   ```elixir
-   def handle_event("save", _params, socket) do
-      uploaded_files =
-         consume_uploaded_entries(socket, :avatar, fn %{path: path}, _entry ->
-            dest = Path.join("priv/static/uploads", Path.basename(path))
-            File.cp!(path, dest)
-            Routes.static_path(socket, "/uploads/#{Path.basename(dest)}")
-         end)
-      {:noreply, update(socket, :uploaded_files, &(&1 ++ uploaded_files))}
-   end
-   ```
-
-   Because handle_event forwards the call to save_post, it was not obvious to me where the best place to put this would be.
-
-   Code before my changes:
-
-   `lib/live_upload_web/live/post_live/form_component.ex`
-
-   ```elixir
-   def handle_event("save", %{"post" => post_params}, socket) do
-      save_post(socket, socket.assigns.action, post_params)
-   end
-   ```
-
-   ```elixir
-   defp save_post(socket, :new, post_params) do
-      case Blog.create_post(post_params) do
-      {:ok, _post} ->
-         {:noreply,
-         socket
-         |> put_flash(:info, "Post created successfully")
-         |> push_redirect(to: socket.assigns.return_to)}
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-         {:noreply, assign(socket, changeset: changeset)}
-      end
-   end
-
-   ```
-
-   I chose to put it in handle_event and add the assign to the session before passing it to save_post:
-
-   After changes:
-   `lib/live_upload_web/live/post_live/form_component.ex`
-
-   ```elixir
-   def handle_event("save", %{"post" => post_params}, socket) do
-      uploaded_files =
-         consume_uploaded_entries(socket, :avatar, fn %{path: path}, _entry ->
-            dest = Path.join("priv/static/uploads", Path.basename(path))
-            File.cp!(path, dest)
-            Routes.static_path(socket, "/uploads/#{Path.basename(dest)}")
-         end)
-
-      save_post(
-         update(socket, :uploaded_files, &(&1 ++ uploaded_files)),
-         socket.assigns.action,
-         post_params
-      )
-   end
-   ```
-
-1. create `priv\static\uploads` directory
-
-1. Run the server
-
-   ```script
-      $ mix phx.server
-   ```
-
-   1. Go to localhost:4000/posts
-   2. Click "New Post"
-   3. Fill in fields and select a file
-   4. Click "save"
-   5. handle_event runs but not the function in argument 4 of `consume_uploaded_entries`
-
-1. add `liveSocket.enableDebug()` to app.js
-
-   `assets\js\app.js`
-
-   ```javascript
-   let liveSocket = new LiveSocket("/live", Socket, {
-     params: { _csrf_token: csrfToken },
-   });
-   liveSocket.enableDebug();
-   ```
-
-1. Run the server again
-
-   ```shell
-      $ mix phx.server
-   ```
-
-   1. Go to localhost:4000/posts
-   1. open console
-   1. Click "New Post"
-   1. Fill in fields and select a file
-   1. Click "save"
-
-   The browser console shows the following: (I added comments at the end of 3 lines)
-
-   ```
-   phx-FkX8FtWVWqjnUggB mount:  -  {0: "", 1: "", 2: {…}, s: Array(4), t: "Listing Posts"}
-   phoenix_live_view.js?2c90:1 phx-FkX8FtWVWqjnUggB update:  -  {2: {…}, c: {…}, t: "New Post"}
-   phoenix_live_view.js?2c90:1 phx-FkX8FtWVWqjnUggB update:  -  {c: {…}}   # after tabbing from title
-   phoenix_live_view.js?2c90:1 phx-FkX8FtWVWqjnUggB update:  -  {c: {…}}   # after tabbing from body
-   phoenix_live_view.js?2c90:1 phx-FkX8FtWVWqjnUggB update:  -  {c: {…}}   # after selecting a file
-   phoenix_live_view.js?2c90:1 phx-FkX8FtWVWqjnUggB destroyed: the child has been removed from the parent -  undefined
-   phoenix_live_view.js?2c90:1 phx-FkX8GhD894iTLAFF mount:  -  {0: "Post created successfully", 1: "", 2: {…}, s: Array(4), t: "Listing Posts"}
-   ```
-
-   Again, there were no uploaded files and it appears `consume_uploaded_entries` never called the function in argument 4.
+```
 
 <br><br><br><br><br><br>
 

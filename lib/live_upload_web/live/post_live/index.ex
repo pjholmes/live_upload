@@ -21,11 +21,11 @@ defmodule LiveUploadWeb.PostLive.Index do
   end
 
   defp apply_action(socket, :new, _params) do
+    IO.puts("In apply_action :new")
+
     socket
     |> assign(:page_title, "New Post")
     |> assign(:post, %Post{})
-    |> assign(:uploaded_files, [])
-    |> allow_upload(:avatar, accept: ~w(.jpg .jpeg .png), max_entries: 1)
   end
 
   defp apply_action(socket, :index, _params) do

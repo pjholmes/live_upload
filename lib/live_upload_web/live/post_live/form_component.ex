@@ -4,6 +4,20 @@ defmodule LiveUploadWeb.PostLive.FormComponent do
   alias LiveUpload.Blog
 
   @impl true
+  def mount(socket) do
+    IO.puts("in mount")
+
+    newSocket =
+      socket
+      |> assign(:uploaded_files, [])
+      |> allow_upload(:avatar, accept: ~w(.jpg .jpeg .png), max_entries: 1)
+
+    IO.inspect(newSocket, label: "Socket")
+
+    {:ok, newSocket}
+  end
+
+  @impl true
   def update(%{post: post} = assigns, socket) do
     changeset = Blog.change_post(post)
 
