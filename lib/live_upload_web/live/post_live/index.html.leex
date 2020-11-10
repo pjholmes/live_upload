@@ -6,7 +6,10 @@
     title: @page_title,
     action: @live_action,
     post: @post,
-    return_to: Routes.post_index_path(@socket, :index) %>
+    uploaded_files: @uploaded_files,
+    uploads: @uploads,
+    return_to: Routes.post_index_path(@socket, :index)
+    %>
 <% end %>
 
 <table>

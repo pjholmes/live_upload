@@ -14,5 +14,7 @@
   <%= text_input f, :body %>
   <%= error_tag f, :body %>
 
+  <%= live_file_input @uploads.avatar %>
+
   <%= submit "Save", phx_disable_with: "Saving..." %>
 </form>

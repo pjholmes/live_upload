@@ -24,7 +24,21 @@ defmodule LiveUploadWeb.PostLive.FormComponent do
   end
 
   def handle_event("save", %{"post" => post_params}, socket) do
-    save_post(socket, socket.assigns.action, post_params)
+    IO.puts("in save")
+
+    uploaded_files =
+      consume_uploaded_entries(socket, :avatar, fn %{path: path}, _entry ->
+        dest = Path.join("priv/static/uploads", Path.basename(path))
+        IO.puts(dest)
+        File.cp!(path, dest)
+        Routes.static_path(socket, "/uploads/#{Path.basename(dest)}")
+      end)
+
+    save_post(
+      update(socket, :uploaded_files, &(&1 ++ uploaded_files)),
+      socket.assigns.action,
+      post_params
+    )
   end
 
   defp save_post(socket, :edit, post_params) do
